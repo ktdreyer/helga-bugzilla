@@ -17,6 +17,7 @@ setup(name="helga-bugzilla",
       url='https://github.com/ktdreyer/helga-bugzilla',
       license='MIT',
       packages=find_packages(),
+      py_modules=['helga_bugzilla'],
       install_requires=[
           'python-bugzilla',
       ],
