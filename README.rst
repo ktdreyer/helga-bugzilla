@@ -1,5 +1,5 @@
 A Bugzilla plugin for helga chat bot
-===================================
+====================================
 
 .. image:: https://travis-ci.org/ktdreyer/helga-bugzilla.svg?branch=master
        :target: https://travis-ci.org/ktdreyer/helga-bugzilla
