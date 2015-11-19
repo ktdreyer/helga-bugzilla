@@ -19,9 +19,12 @@ setup(name="helga-bugzilla",
       packages=find_packages(),
       py_modules=['helga_bugzilla'],
       install_requires=[
+          'helga',
           'python-bugzilla',
       ],
       tests_require=[
+          'helga',
+          'pytest',
           'python-bugzilla',
       ],
       entry_points = dict(
