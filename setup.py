@@ -4,6 +4,7 @@ from setuptools.command.test import test as TestCommand
 
 version = '1.0.1'
 
+
 class PyTest(TestCommand):
     user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
 
@@ -17,7 +18,6 @@ class PyTest(TestCommand):
         self.test_suite = True
 
     def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
         import pytest
         errno = pytest.main('tests', self.pytest_args)
         sys.exit(errno)
@@ -29,7 +29,6 @@ setup(name="helga-bugzilla",
                    'License :: OSI Approved :: MIT License',
                    'Operating System :: OS Independent',
                    'Programming Language :: Python',
-                   'Topic :: Software Development :: Libraries :: Python Modules',
                    ],
       keywords='irc bot bugzilla',
       author='ken dreyer',
@@ -47,8 +46,8 @@ setup(name="helga-bugzilla",
           'pytest',
           'python-bugzilla',
       ],
-      entry_points = dict(
-          helga_plugins = [
+      entry_points=dict(
+          helga_plugins=[
               'bugzilla = helga_bugzilla:helga_bugzilla',
           ],
       ),

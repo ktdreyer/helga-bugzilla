@@ -2,6 +2,7 @@ from helga_bugzilla import is_ticket, sanitize, get_bug_url, get_bug_subject
 import pytest
 from bugzilla import BugzillaError
 
+
 def line_matrix():
     pre_garbage = [' ', '', 'some question about ',]
     prefixes = ['bug', 'BuG', 'bz', 'rhbz', 'RHBZ']
@@ -18,6 +19,7 @@ def line_matrix():
                         )
                     )
     return lines
+
 
 def fail_line_matrix():
     pre_garbage = [' ', '', 'some question about ',]
@@ -39,7 +41,6 @@ def fail_line_matrix():
     return lines
 
 
-
 class TestIsTicket(object):
 
     @pytest.mark.parametrize('line', line_matrix())
@@ -49,6 +50,7 @@ class TestIsTicket(object):
     @pytest.mark.parametrize('line', fail_line_matrix())
     def test_does_not_match(self, line):
         assert is_ticket(line) is None
+
 
 def match_matrix():
     matches = ['1234', '#1234']
@@ -65,7 +67,6 @@ def match_matrix():
     return lines
 
 
-
 class TestSanitize(object):
 
     @pytest.mark.parametrize('match', match_matrix())
@@ -76,14 +77,17 @@ class TestSanitize(object):
 class FakeSettings(object):
     pass
 
+
 class FakeBug(object):
     pass
+
 
 class TestGetBugUrl(object):
 
     def test_get_custom_url(self):
         settings = FakeSettings()
-        settings.BUGZILLA_TICKET_URL = "https://bugzilla.example.com/%(ticket)s"
+        url = "https://bugzilla.example.com/%(ticket)s"
+        settings.BUGZILLA_TICKET_URL = url
         bug = FakeBug()
         result = get_bug_url(settings, bug, 1234)
         assert result == 'https://bugzilla.example.com/1234'
@@ -101,6 +105,7 @@ class TestGetBugUrl(object):
         bug.__getattr__ = lambda: (_ for _ in ()).throw(BugzillaError('boom'))
         result = get_bug_url(settings, bug, 1234)
         assert result is None
+
 
 class TestGetBugSubject(object):
 
