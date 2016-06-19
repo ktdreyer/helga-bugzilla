@@ -18,7 +18,7 @@ and print information about the tickets. For example::
 
   03:14 < ktdreyer> bz 1217809
   03:14 < helgabot> ktdreyer might be talking about
-                    https://bugzilla.redhat.com/show_bug.cgi?id=1217809
+                    https://bugzilla.redhat.com/1217809
                     [[TRACKER] SELinux support]
 
 Installation
@@ -33,26 +33,36 @@ If you want to hack on the helga-bugzilla source code, in your virtualenv where
 you are running Helga, clone a copy of this repository from GitHub and run
 ``python setup.py develop``.
 
-Configuration
--------------
+Optional: URL Configuration
+---------------------------
+
 In your ``settings.py`` file (or whatever you pass to ``helga --settings``),
-you must specify a ``BUGZILLA_XMLRPC_URL``. For example::
+you can specify a ``BUGZILLA_XMLRPC_URL``. For example::
 
   BUGZILLA_XMLRPC_URL = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 
-Optionally you can also specify a short URL format::
+(If you do not specify this setting, the plugin will use txbugzilla's default
+URL, which is Red Hat's bugzilla.)
+
+You can also specify a URL format::
 
   BUGZILLA_TICKET_URL = "https://bugzilla.redhat.com/%(ticket)s"
 
 The ``%(ticket)s`` format string will be replaced with the bug number.
+Since the underlying library (txbugzilla) already constructs these web
+URLs for bugs automatically, you probably don't need to add this setting
+to helga. It's only necessary if your custom Bugzilla requires some
+other URL scheme.
 
 Optional: Authenticated access
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, Helga only reads tickets that are publicly accessible. You may
-optionally give Helga privilieged access to Bugzilla and allow Helga to read
-private bugs by setting up a python-bugzilla credential::
+optionally give Helga privileged access to Bugzilla and allow Helga to read
+private bugs by setting up a `python-bugzilla
+<https://pypi.python.org/pypi/python-bugzilla>`_ credential::
 
+  $ pip install python-bugzilla
   $ bugzilla login
   (enter your username and password)
 
@@ -60,9 +70,8 @@ private bugs by setting up a python-bugzilla credential::
 if the XMLRPC URI is not the default, https://bugzilla.redhat.com/xmlrpc.cgi)
 
 This ``bugzilla login`` command will save your login credential to
-``.bugzillacookies`` or ``.bugzillatoken``. When this is set, Helga will be
-able to read private bugs with using the permissions of the user to whom the
-API key belongs.
+``.bugzillatoken``. When this is set, Helga will be able to read private bugs
+with using the permissions of the user to whom the API key belongs.
 
 **Note**: This authentication feature can expose private information (ticket
 subjects) about your Bugzilla bugs. If you use this feature, be sure that the

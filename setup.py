@@ -40,12 +40,10 @@ setup(name="helga-bugzilla",
       py_modules=['helga_bugzilla'],
       install_requires=[
           'helga',
-          'python-bugzilla',
+          'txbugzilla>=1.0.1',
       ],
       tests_require=[
-          'helga',
           'pytest',
-          'python-bugzilla',
       ],
       entry_points=dict(
           helga_plugins=[

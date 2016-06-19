@@ -1,10 +1,10 @@
-from helga_bugzilla import is_ticket, sanitize, get_bug_url, get_bug_subject
+from helga_bugzilla import match_tickets, construct_message, send_message
 import pytest
-from bugzilla import BugzillaError
+from attrdict import AttrDict
 
 
 def line_matrix():
-    pre_garbage = [' ', '', 'some question about ',]
+    pre_garbage = [' ', '', 'some question about ']
     prefixes = ['bug', 'BuG', 'bz', 'rhbz', 'RHBZ']
     numbers = ['#123467890', '1234567890']
     garbage = ['?', ' ', '.', '!', '..', '...']
@@ -22,9 +22,9 @@ def line_matrix():
 
 
 def fail_line_matrix():
-    pre_garbage = [' ', '', 'some question about ',]
+    pre_garbage = [' ', '', 'some question about ']
     pre_prefixes = ['', ' ', 'f']
-    prefixes = ['bugs', 'RHBZ']
+    prefixes = ['bug', 'BuG', 'bz', 'rhbz', 'RHBZ']
     numbers = ['#G123467890', 'F1234567890']
     garbage = ['?', ' ', '.', '!', '..', '...']
     lines = []
@@ -41,82 +41,94 @@ def fail_line_matrix():
     return lines
 
 
+multiple_ticket_lines = [
+    'bugs #1 #2 #3',
+    'bugs 1, 2, 3',
+    'bugs 1, 2 and 3',
+    'bugs 1, 2, and 3',
+    'bugs 1 and 2 and 3',
+    'bugs 1, and 2, and 3',
+]
+
+
 class TestIsTicket(object):
 
     @pytest.mark.parametrize('line', line_matrix())
     def test_matches(self, line):
-        assert is_ticket(line)
+        assert len(match_tickets(line)) > 0
 
     @pytest.mark.parametrize('line', fail_line_matrix())
     def test_does_not_match(self, line):
-        assert is_ticket(line) is None
+        assert match_tickets(line) == []
+
+    @pytest.mark.parametrize('line', multiple_ticket_lines)
+    def test_matches_multiple_tickets(self, line):
+        assert match_tickets(line) == ['1', '2', '3']
 
 
-def match_matrix():
-    matches = ['1234', '#1234']
-    prefixes = ['', ' ']
-    suffixes = ['', ' ']
-    lines = []
-
-    for match in matches:
-        for prefix in prefixes:
-            for suffix in suffixes:
-                lines.append(
-                    ['', '%s%s%s' % (prefix, match, suffix)]
-                )
-    return lines
+class FakeClient(object):
+    """
+    Fake Helga client (eg IRC or XMPP) that simply saves the last
+    message sent.
+    """
+    def msg(self, channel, msg):
+        self.last_message = (channel, msg)
 
 
-class TestSanitize(object):
-
-    @pytest.mark.parametrize('match', match_matrix())
-    def test_sanitizes(self, match):
-        assert sanitize(match) == '1234'
-
-
-class FakeSettings(object):
-    pass
-
-
-class FakeBug(object):
-    pass
-
-
-class TestGetBugUrl(object):
-
-    def test_get_custom_url(self):
-        settings = FakeSettings()
-        url = "https://bugzilla.example.com/%(ticket)s"
-        settings.BUGZILLA_TICKET_URL = url
-        bug = FakeBug()
-        result = get_bug_url(settings, bug, 1234)
-        assert result == 'https://bugzilla.example.com/1234'
-
-    def test_get_fallback_url(self):
-        settings = FakeSettings()
-        bug = FakeBug()
-        bug.weburl = 'https://bugzilla.example.com/show_bug.cgi?id=1234'
-        result = get_bug_url(settings, bug, 1234)
-        assert result == 'https://bugzilla.example.com/show_bug.cgi?id=1234'
-
-    def test_get_broken_bug_url(self):
-        settings = FakeSettings()
-        bug = FakeBug()
-        bug.__getattr__ = lambda: (_ for _ in ()).throw(BugzillaError('boom'))
-        result = get_bug_url(settings, bug, 1234)
-        assert result is None
+class TestSendMessage(object):
+    def test_send_message(self):
+        bug = AttrDict({'summary': 'some issue subject',
+                        'weburl': 'http://bz.example.com/1'})
+        client = FakeClient()
+        channel = '#bots'
+        nick = 'ktdreyer'
+        # Send the message using our fake client
+        send_message([bug], client, channel, nick)
+        expected = ('ktdreyer might be talking about '
+                    'http://bz.example.com/1 [some issue subject]')
+        assert client.last_message == (channel, expected)
 
 
-class TestGetBugSubject(object):
+class TestConstructMessage(object):
 
-    def test_get_correct_subject(self):
-        bug = FakeBug()
-        bug.summary = 'some issue subject'
-        result = get_bug_subject(bug, 1234)
-        assert result == 'some issue subject'
+    def test_construct_message(self):
+        bug = AttrDict({'summary': 'some issue subject',
+                        'weburl': 'http://bz.example.com/1'})
+        nick = 'ktdreyer'
+        result = construct_message([bug], nick)
+        expected = ('ktdreyer might be talking about '
+                    'http://bz.example.com/1 [some issue subject]')
+        assert result == expected
 
-    def test_get_fallback_subject(self):
-        bug = FakeBug()
-        bug.__getattr__ = lambda: (_ for _ in ()).throw(BugzillaError('boom'))
-        result = get_bug_subject(bug, 1234)
-        assert result == 'unable to read subject'
+    def test_two_tickets(self):
+        bugs = []
+        bugs.append(AttrDict({'summary': 'some issue subject',
+                              'weburl': 'http://bz.example.com/1'}))
+        bugs.append(AttrDict({'summary': 'another issue subject',
+                              'weburl': 'http://bz.example.com/2'}))
+        nick = 'ktdreyer'
+        result = construct_message(bugs, nick)
+        expected = ('ktdreyer might be talking about '
+                    'http://bz.example.com/1 [some issue subject] and '
+                    'http://bz.example.com/2 [another issue subject]')
+        assert result == expected
+
+    def test_four_tickets(self):
+        """ Verify that commas "," and "and" get put in the right places. """
+        bugs = []
+        bugs.append(AttrDict({'summary': 'subj 1',
+                              'weburl': 'http://bz.example.com/1'}))
+        bugs.append(AttrDict({'summary': 'subj 2',
+                              'weburl': 'http://bz.example.com/2'}))
+        bugs.append(AttrDict({'summary': 'subj 3',
+                              'weburl': 'http://bz.example.com/3'}))
+        bugs.append(AttrDict({'summary': 'subj 4',
+                              'weburl': 'http://bz.example.com/4'}))
+        nick = 'ktdreyer'
+        result = construct_message(bugs, nick)
+        expected = ('ktdreyer might be talking about '
+                    'http://bz.example.com/1 [subj 1], '
+                    'http://bz.example.com/2 [subj 2], '
+                    'http://bz.example.com/3 [subj 3] and '
+                    'http://bz.example.com/4 [subj 4]')
+        assert result == expected

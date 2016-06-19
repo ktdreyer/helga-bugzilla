@@ -1,88 +1,82 @@
-import bugzilla
+from txbugzilla import connect
+from twisted.internet import defer
 import re
 from helga.plugins import match
 from helga import log, settings
 
 logger = log.getLogger(__name__)
 
-regex = re.compile(
-    r'(.*)(bugzilla|bug|bz|rhbz)\s+(#[0-9]+|[0-9]+)', re.IGNORECASE
-)
+
+def match_tickets(message):
+    tickets = []
+
+    pattern = re.compile(r"""
+       (?:               # Prefix to trigger the plugin:
+            bzs?         #   "bz" or "bzs"
+          | bugs?        #   "bug" or "bugs"
+          | bugzilla?    #   "bugzilla" or "bugzillas"
+       )                 #
+       \s*               #
+       [#]?[0-9]+        # Number, optionally preceded by "#"
+       (?:               # The following pattern will match zero or more times:
+          ,?             #   Optional comma
+          \s+            #
+          (?:and\s+)?    #   Optional "and "
+          [#]?[0-9]+     #   Number, optionally preceded by "#"
+       )*
+       """, re.VERBOSE | re.IGNORECASE)
+    for bzmatch in re.findall(pattern, message):
+        for ticket in re.findall(r'[0-9]+', bzmatch):
+            tickets.append(ticket)
+    return tickets
 
 
-def is_ticket(message):
-    return regex.match(message)
-
-
-def sanitize(match):
-    """
-    this function sanitizes the match from a ``regex.match(phrase)``
-    call to return the ticket id only.
-    """
-    if not match:
-        return ''
-    ticket_id = match[-1]  # Always the last one in the group
-    ticket_id = ticket_id.strip()  # probably not necessary?
-    return ticket_id.strip('#')
-
-
-def get_bug_subject(bug, ticket_number):
-    try:
-        return bug.summary
-    except Exception as err:
-        msg = 'Problem looking up subject for BZ %s: %s'
-        logger.warning(msg % (ticket_number, err))
-        # If we can't look up the subject, return a default string.
-        return 'unable to read subject'
-
-
-def get_bug_url(settings, bug, ticket_number):
-    try:
-        return settings.BUGZILLA_TICKET_URL % {'ticket': ticket_number}
-    except AttributeError:
-        logger.debug("BUGZILLA_TICKET_URL is undefined; using API's weburl")
-    try:
-        return bug.weburl
-    except Exception as err:
-        msg = 'Problem looking up URL for BZ %s: %s'
-        logger.warning(msg % (ticket_number, err))
-        # If we can't look up the subject, return a default string.
-        return None
-
-
-@match(is_ticket, priority=0)
+@match(match_tickets, priority=0)
 def helga_bugzilla(client, channel, nick, message, matches):
     """
-    Match possible Bugzilla tickets, return links and subject info
+    Match possible Bugzilla tickets, return links and summary info
     """
-    ticket_number = sanitize(matches.groups())
+    connect_args = {}
+    if hasattr(settings, 'BUGZILLA_XMLRPC_URL'):
+        connect_args['url'] = settings.BUGZILLA_XMLRPC_URL
+    d = connect(**connect_args)
 
-    if not ticket_number:
-        msg = 'I could not determine the right ticket from matches: %s'
-        logger.warning(msg % matches.groups())
-        # If we can't figure out the ticket number, just bail.
-        return
+    d.addCallback(get_summaries, matches, client, channel)
+    d.addErrback(send_err, client, channel)
+    # TODO: make this second callback not fire, if errback was called.
+    d.addCallback(send_message, client, channel, nick)
+    d.addErrback(send_err, client, channel)
 
-    if not settings.BUGZILLA_XMLRPC_URL:
-        logger.warning("Add BUGZILLA_XMLRPC_URL to your settings.py file.")
-        return
 
-    try:
-        bz = bugzilla.Bugzilla(url=settings.BUGZILLA_XMLRPC_URL)
-        bug = bz.getbugsimple(ticket_number)
-    except Exception as err:
-        msg = 'Problem with Bugzilla API with url=%s: %s'
-        logger.warning(msg % (settings.BUGZILLA_XMLRPC_URL, err))
-        # If we had Bugzilla API problems, just bail.
-        return
+@defer.inlineCallbacks
+def get_summaries(bz, matches, client, channel):
+    bugs = yield bz.get_bugs_summaries(matches)
+    defer.returnValue(bugs)
 
-    ticket_url = get_bug_url(settings, bug, ticket_number)
 
-    if not ticket_url:
-        # If we can't find a URL, just bail.
-        return
+def construct_message(bugs, nick):
+    """
+    Return a string about a nick and a list of tickets' URLs and summaries.
+    """
+    msgs = []
+    for bug in bugs:
+        if hasattr(settings, 'BUGZILLA_TICKET_URL'):
+            url = settings.BUGZILLA_TICKET_URL % {'ticket': bug.id}
+        else:
+            url = bug.weburl
+        msgs.append('%s [%s]' % (url, bug.summary))
+    if len(msgs) == 1:
+        msg = msgs[0]
+    else:
+        msg = "{} and {}".format(", ".join(msgs[:-1]), msgs[-1])
+    return '%s might be talking about %s' % (nick, msg)
 
-    ticket_subject = get_bug_subject(bug, ticket_number)
 
-    result = "%s might be talking about %s [%s]"
-    return result % (nick, ticket_url, ticket_subject)
+def send_message(bugs, client, channel, nick):
+    if bugs is not None:
+        msg = construct_message(bugs, nick)
+        client.msg(channel, msg)
+
+
+def send_err(e, client, channel):
+    client.msg(channel, str(e.value))
