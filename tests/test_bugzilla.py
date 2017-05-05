@@ -65,6 +65,10 @@ class TestIsTicket(object):
     def test_matches_multiple_tickets(self, line):
         assert match_tickets(line) == ['1', '2', '3']
 
+    def test_ignore_bz2(self):
+        line = 'please download the ceph.tar.bz2 file'
+        assert match_tickets(line) == []
+
 
 class FakeClient(object):
     """
