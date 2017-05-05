@@ -29,7 +29,8 @@ def match_tickets(message):
         for ticket in re.findall(r'[0-9]+', bzmatch):
             if ticket == '2' and 'bz2' in bzmatch:
                 continue  # False positive, like ".tar.bz2".
-            tickets.append(ticket)
+            if ticket not in tickets:
+                tickets.append(ticket)
     return tickets
 
 

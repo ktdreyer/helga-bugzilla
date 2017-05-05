@@ -69,6 +69,10 @@ class TestIsTicket(object):
         line = 'please download the ceph.tar.bz2 file'
         assert match_tickets(line) == []
 
+    def test_dedupe(self):
+        line = 'bug 1 and bug 1'
+        assert match_tickets(line) == ['1']
+
 
 class FakeClient(object):
     """
