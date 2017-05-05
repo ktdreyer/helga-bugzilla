@@ -1,7 +1,7 @@
 from txbugzilla import connect
 from twisted.internet import defer
 import re
-from helga.plugins import match
+from helga.plugins import match, ResponseNotReady
 from helga import log, settings
 
 logger = log.getLogger(__name__)
@@ -46,6 +46,7 @@ def helga_bugzilla(client, channel, nick, message, matches):
     # TODO: make this second callback not fire, if errback was called.
     d.addCallback(send_message, client, channel, nick)
     d.addErrback(send_err, client, channel)
+    raise ResponseNotReady
 
 
 @defer.inlineCallbacks
