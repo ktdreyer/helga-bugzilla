@@ -1,4 +1,6 @@
-from helga_bugzilla import match_tickets, construct_message, send_message
+from helga_bugzilla.actions.describe import match
+from helga_bugzilla.actions.describe import construct_message
+from helga_bugzilla.actions.describe import send_message
 import pytest
 from attrdict import AttrDict
 
@@ -55,23 +57,23 @@ class TestIsTicket(object):
 
     @pytest.mark.parametrize('line', line_matrix())
     def test_matches(self, line):
-        assert len(match_tickets(line)) > 0
+        assert len(match(line)) > 0
 
     @pytest.mark.parametrize('line', fail_line_matrix())
     def test_does_not_match(self, line):
-        assert match_tickets(line) == []
+        assert match(line) == []
 
     @pytest.mark.parametrize('line', multiple_ticket_lines)
     def test_matches_multiple_tickets(self, line):
-        assert match_tickets(line) == ['1', '2', '3']
+        assert match(line) == ['1', '2', '3']
 
     def test_ignore_bz2(self):
         line = 'please download the ceph.tar.bz2 file'
-        assert match_tickets(line) == []
+        assert match(line) == []
 
     def test_dedupe(self):
         line = 'bug 1 and bug 1'
-        assert match_tickets(line) == ['1']
+        assert match(line) == ['1']
 
 
 class FakeClient(object):
@@ -91,7 +93,7 @@ class TestSendMessage(object):
         channel = '#bots'
         nick = 'ktdreyer'
         # Send the message using our fake client
-        send_message([bug], client, channel, nick)
+        send_message([bug], ['bz#1'], client, channel, nick)
         expected = ('ktdreyer might be talking about '
                     'http://bz.example.com/1 [some issue subject]')
         assert client.last_message == (channel, expected)
