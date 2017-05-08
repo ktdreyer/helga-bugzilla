@@ -1,13 +1,13 @@
 from txbugzilla import connect
 from helga.plugins import match, ResponseNotReady
 from helga import log, settings
-from helga_bugzilla.actions import describe
+from helga_bugzilla.actions import describe, search_external
 
 logger = log.getLogger(__name__)
 
 
 def match_bugzilla(message):
-    for action in (describe,):
+    for action in (describe, search_external):
         matches = action.match(message)
         if matches:
             return (action, matches)
