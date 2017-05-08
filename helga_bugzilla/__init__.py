@@ -2,6 +2,7 @@ from txbugzilla import connect
 from helga.plugins import match, ResponseNotReady
 from helga import log, settings
 from helga_bugzilla.actions import describe, search_external
+from helga_bugzilla.exceptions import HelgaBugzillaError
 
 logger = log.getLogger(__name__)
 
@@ -32,3 +33,7 @@ def helga_bugzilla(client, channel, nick, message, action_and_matches):
 
 def send_err(e, client, channel):
     client.msg(channel, str(e.value))
+    # Provide the file and line number if this was an an unexpected error.
+    if not isinstance(e.value, HelgaBugzillaError):
+        tb = e.getBriefTraceback().split()
+        client.msg(channel, str(tb[-1]))
