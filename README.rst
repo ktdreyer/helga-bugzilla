@@ -21,6 +21,16 @@ and print information about the tickets. For example::
                     https://bugzilla.redhat.com/1217809
                     [[TRACKER] SELinux support]
 
+The bot can also search external trackers. This allows you to find BZs for
+other systems' tickets. For example::
+
+  03:14 < ktdreyer> what bz is http://tracker.ceph.com/issues/16673 ?
+  03:14 < helgabot> ktdreyer, http://tracker.ceph.com/issues/16673 is
+                    https://bugzilla.redhat.com/1422893 [[RFE] rgw: add suport
+                    for Swift-at-root dependent features of Swift API]
+
+This uses a `Red Hat Bugzilla extension <https://bugzilla.redhat.com/docs/en/html/api/extensions/ExternalBugs/lib/WebService.html>`_.
+
 Installation
 ------------
 This Bugzilla plugin is `available from PyPI
