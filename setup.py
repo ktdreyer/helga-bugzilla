@@ -1,5 +1,5 @@
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 version = '1.2.0'
@@ -36,7 +36,7 @@ setup(name="helga-bugzilla",
       author_email='ktdreyer [at] ktdreyer [dot] com',
       url='https://github.com/ktdreyer/helga-bugzilla',
       license='MIT',
-      packages=['helga_bugzilla'],
+      packages=find_packages(),
       install_requires=[
           'helga',
           'txbugzilla>=1.2.0',
