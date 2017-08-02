@@ -25,6 +25,7 @@ def line_matrix():
         'matches',
         'tracks',
         'corresponds to',
+        'relates to',
         'for',
         'that is',
         'that matches',

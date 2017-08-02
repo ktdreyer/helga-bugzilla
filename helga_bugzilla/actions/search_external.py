@@ -42,6 +42,7 @@ def match(message):
             is
           | matches
           | tracks
+          | relates\sto
           | corresponds\sto
           | for
           | that\sis
