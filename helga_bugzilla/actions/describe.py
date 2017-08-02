@@ -31,6 +31,9 @@ def match(message):
         if re.search(r'http\S+%s' % bzmatch, message):
             # Skip "bz" strings in URLs.
             continue
+        if '-%s' % bzmatch in message or '.%s' % bzmatch in message:
+            # Skip "-bz" or ".bz" strings (git branches or NVRs).
+            continue
         for ticket in re.findall(r'[0-9]+', bzmatch):
             if ticket == '2' and 'bz2' in bzmatch:
                 continue  # False positive, like ".tar.bz2".

@@ -75,6 +75,14 @@ class TestIsTicket(object):
         line = 'please try http://example.com/package.bz1234.rpm'
         assert match(line) == []
 
+    def test_ignore_branch(self):
+        line = 'push your changes to ceph-1.3-rhel-patches-test-bz12345'
+        assert match(line) == []
+
+    def test_ignore_nvr(self):
+        line = 'the build NVR is 10.2.5-28.1.bz1445891redhat1xenial'
+        assert match(line) == []
+
     def test_dedupe(self):
         line = 'bug 1 and bug 1'
         assert match(line) == ['1']
