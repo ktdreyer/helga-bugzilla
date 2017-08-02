@@ -71,6 +71,10 @@ class TestIsTicket(object):
         line = 'please download the ceph.tar.bz2 file'
         assert match(line) == []
 
+    def test_ignore_url(self):
+        line = 'please try http://example.com/package.bz1234.rpm'
+        assert match(line) == []
+
     def test_dedupe(self):
         line = 'bug 1 and bug 1'
         assert match(line) == ['1']
