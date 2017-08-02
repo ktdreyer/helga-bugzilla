@@ -1,4 +1,8 @@
+import re
 from txbugzilla import connect
+from txbugzilla import BugzillaNotFoundException
+from txbugzilla import BugzillaNotAuthorizedException
+from txbugzilla import BugzillaTokenExpiredException
 from helga.plugins import match, ResponseNotReady
 from helga import log, settings
 from helga_bugzilla.actions import describe, search_external
@@ -32,8 +36,28 @@ def helga_bugzilla(client, channel, nick, message, action_and_matches):
 
 
 def send_err(e, client, channel):
+    if isinstance(e.value, BugzillaNotFoundException):
+        client.msg(channel, str(e.value))
+        return
+    if isinstance(e.value, BugzillaNotAuthorizedException):
+        not_authorized(e.value.id, client, channel)
+        return
+    if isinstance(e.value, BugzillaTokenExpiredException):
+        logger.error('My bugzilla token is incorrect or expired. '
+                     'Please re-authenticate')
+        return
     client.msg(channel, str(e.value))
     # Provide the file and line number if this was an an unexpected error.
     if not isinstance(e.value, HelgaBugzillaError):
         tb = e.getBriefTraceback().split()
         client.msg(channel, str(tb[-1]))
+
+
+def not_authorized(id_, client, channel):
+    if hasattr(settings, 'BUGZILLA_TICKET_URL'):
+        url = settings.BUGZILLA_TICKET_URL % {'ticket': id_}
+    else:
+        url = 'bug #%s' % id_
+    summary = 'could not read subject (not authorized)'
+    msg = '%s [%s]' % (url, summary)
+    client.msg(channel, msg)

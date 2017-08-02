@@ -39,7 +39,7 @@ setup(name="helga-bugzilla",
       packages=find_packages(),
       install_requires=[
           'helga',
-          'txbugzilla>=1.2.0',
+          'txbugzilla>=1.4.0',
       ],
       tests_require=[
           'pytest',
