@@ -1,8 +1,17 @@
+import re
 import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-version = '1.3.1'
+
+def read_module_contents():
+    with open('helga_bugzilla/__init__.py') as init:
+        return init.read()
+
+
+module_file = read_module_contents()
+metadata = dict(re.findall("__([a-z]+)__\s*=\s*'([^']+)'", module_file))
+version = metadata['version']
 
 
 class PyTest(TestCommand):
