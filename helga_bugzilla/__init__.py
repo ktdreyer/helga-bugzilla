@@ -1,4 +1,3 @@
-import re
 from txbugzilla import connect
 from txbugzilla import BugzillaNotFoundException
 from txbugzilla import BugzillaNotAuthorizedException
