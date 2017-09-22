@@ -76,8 +76,9 @@ private bugs by setting up a `python-bugzilla
   $ bugzilla login
   (enter your username and password)
 
-(Use the ``--bugzilla=https://bugzilla.example.com/xmlrpc.cgi`` argument here
-if the XMLRPC URI is not the default, https://bugzilla.redhat.com/xmlrpc.cgi)
+(Use ``bugzilla --bugzilla=https://bugzilla.example.com/xmlrpc.cgi login``
+here if the XMLRPC URI is not the default,
+https://bugzilla.redhat.com/xmlrpc.cgi)
 
 This ``bugzilla login`` command will save your login credential to
 ``.bugzillatoken``. When this is set, Helga will be able to read private bugs
