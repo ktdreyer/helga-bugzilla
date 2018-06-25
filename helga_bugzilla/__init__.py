@@ -7,7 +7,7 @@ from helga import log, settings
 from helga_bugzilla.actions import describe, search_external
 from helga_bugzilla.exceptions import HelgaBugzillaError
 
-__version__ = '1.3.1'
+__version__ = '1.3.2'
 
 
 logger = log.getLogger(__name__)
