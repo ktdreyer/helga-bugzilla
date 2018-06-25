@@ -20,7 +20,7 @@ def match_bugzilla(message):
             return (action, matches)
 
 
-@match(match_bugzilla, priority=0)
+@match(match_bugzilla)
 def helga_bugzilla(client, channel, nick, message, action_and_matches):
     """
     Match information related to Bugzilla.
