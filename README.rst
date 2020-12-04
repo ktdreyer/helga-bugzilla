@@ -1,8 +1,8 @@
 A Bugzilla plugin for helga chat bot
 ====================================
 
-.. image:: https://travis-ci.org/ktdreyer/helga-bugzilla.svg?branch=master
-       :target: https://travis-ci.org/ktdreyer/helga-bugzilla
+.. image:: https://github.com/ktdreyer/helga-bugzilla/workflows/tests/badge.svg
+      :target: https://github.com/ktdreyer/helga-bugzilla/actions
 
 .. image:: https://badge.fury.io/py/helga-bugzilla.svg
        :target: https://badge.fury.io/py/helga-bugzilla

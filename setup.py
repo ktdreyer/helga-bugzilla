@@ -1,7 +1,5 @@
 import re
-import sys
 from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
 
 
 def read_module_contents():
@@ -13,24 +11,6 @@ module_file = read_module_contents()
 metadata = dict(re.findall("__([a-z]+)__\s*=\s*'([^']+)'", module_file))
 version = metadata['version']
 
-
-class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = []
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        import pytest
-        args = 'helga_bugzilla/tests ' + self.pytest_args
-        errno = pytest.main(args.split())
-        sys.exit(errno)
 
 setup(name="helga-bugzilla",
       version=version,
@@ -51,13 +31,9 @@ setup(name="helga-bugzilla",
           'helga',
           'txbugzilla>=1.4.0',
       ],
-      tests_require=[
-          'pytest',
-      ],
       entry_points=dict(
           helga_plugins=[
               'bugzilla = helga_bugzilla:helga_bugzilla',
           ],
       ),
-      cmdclass = {'test': PyTest},
 )
