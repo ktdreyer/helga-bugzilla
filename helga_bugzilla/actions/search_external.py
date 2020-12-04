@@ -81,20 +81,20 @@ def find_tracker_url(ticket_url):
 def find_tracker_id(ticket_url):
     matches = None
     if 'code.engineering.redhat.com' in ticket_url:
-        matches = re.findall('\d+$', ticket_url)
+        matches = re.findall(r'\d+$', ticket_url)
     elif 'github.com' in ticket_url:
-        matches = re.findall('github\.com/(.+)', ticket_url)
+        matches = re.findall(r'github\.com/(.+)', ticket_url)
     elif 'launchpad.net' in ticket_url:
-        matches = re.findall('\d+$', ticket_url)
+        matches = re.findall(r'\d+$', ticket_url)
     elif 'projects.engineering.redhat.com' in ticket_url:
         regex = 'projects.engineering.redhat.com/browse/(.+)'
         matches = re.findall(regex, ticket_url)
     elif 'review.gerrithub.io' in ticket_url:
-        matches = re.findall('\d+$', ticket_url)
+        matches = re.findall(r'\d+$', ticket_url)
     elif 'tracker.ceph.com' in ticket_url:
-        matches = re.findall('\d+$', ticket_url)
+        matches = re.findall(r'\d+$', ticket_url)
     elif 'trello.com' in ticket_url:
-        matches = re.findall('trello\.com/c/([^/]+)', ticket_url)
+        matches = re.findall(r'trello\.com/c/([^/]+)', ticket_url)
     if matches:
         return matches[0]
     raise UnknownTrackerError(ticket_url)
