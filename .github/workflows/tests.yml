@@ -4,12 +4,13 @@ on: [push, pull_request]
 
 jobs:
   tox:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 5
       matrix:
-        python-version:
-        - 2.7
+        include:
+          - python-version: 2.7
+            os: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
